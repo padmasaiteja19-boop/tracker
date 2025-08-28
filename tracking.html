@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            padding: 30px;
+            max-width: 900px; /* Increased max-width */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .section-title {
+            font-size: 1.75rem; /* Larger title */
+            font-weight: 700;
+            color: #1f2937; /* Darker text */
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb; /* Subtle separator */
+            padding-bottom: 10px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Deeper purple */
+            color: white;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* Darker on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+        }
+        .btn-secondary {
+            background-color: #6b7280; /* Gray for secondary */
+            color: white;
+            box-shadow: 0 4px 10px rgba(107, 114, 128, 0.3);
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* Darker on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(107, 114, 128, 0.4);
+        }
+        input[type="text"], textarea {
+            padding: 12px;
+            border: 1px solid #d1d5db; /* Lighter border */
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1rem;
+            color: #374151;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #4f46e5; /* Highlight on focus */
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        .message-box {
+            background-color: #e0f2fe; /* Light blue for info */
+            color: #0c4a6e; /* Dark blue text */
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #90cdf4;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .error-box {
+            background-color: #fee2e2; /* Light red for error */
+            color: #991b1b; /* Dark red text */
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .location-item {
+            background-color: #f9fafb; /* Slightly different background for items */
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .location-item strong {
+            color: #1f2937;
+        }
+        .location-item span {
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+        .flex-col-gap {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Message Box for general messages -->
+        <div id="messageBox" class="message-box hidden"></div>
+        <div id="errorBox" class="error-box hidden"></div>
+
+        <!-- Main content for the tracker (default view) -->
+        <div id="trackerApp" class="flex-col-gap">
+            <h1 class="section-title">Generate Tracking Link</h1>
+            <p class="text-gray-700">
+                Generate a unique link below. Share this link with others. When they open it and grant location access, their location will appear here.
+                <br><strong class="text-red-600">Disclaimer: Use this tool ethically and with explicit consent from individuals whose location you intend to track. Unauthorized tracking is a violation of privacy.</strong>
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <button id="generateLinkBtn" class="btn btn-primary">Generate New Tracking Link</button>
+                <button id="copyLinkBtn" class="btn btn-secondary" disabled>Copy Link</button>
+            </div>
+
+            <div id="generatedLinkContainer" class="hidden flex-col-gap">
+                <label for="trackingLink" class="text-gray-700 font-semibold">Your Tracking Link:</label>
+                <input type="text" id="trackingLink" readonly class="bg-gray-100 cursor-text">
+            </div>
+
+            <h2 class="section-title mt-8">Tracked Locations</h2>
+            <div id="locationsList" class="flex-col-gap">
+                <p class="text-gray-500" id="noLocationsMessage">No locations tracked yet for this session. Generate a link and share it!</p>
+            </div>
+        </div>
+
+        <!-- Content for the tracked person (when sessionId is present) -->
+        <div id="trackedApp" class="hidden flex-col-gap items-center justify-center text-center p-8">
+            <h1 class="section-title">Location Tracking</h1>
+            <p class="text-gray-700 text-lg" id="trackingStatus">Attempting to get your location...</p>
+            <div id="trackingSpinner" class="spinner mt-4"></div>
+            <p class="text-gray-500 mt-4">
+                This page is requesting your location to provide a service. Please grant permission if you wish to proceed.
+                If you deny permission, your location will not be shared.
+            </p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, query, addDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUserId = null;
+        let isAuthReady = false;
+
+        // UI Elements
+        const messageBox = document.getElementById('messageBox');
+        const errorBox = document.getElementById('errorBox');
+        const trackerApp = document.getElementById('trackerApp');
+        const trackedApp = document.getElementById('trackedApp');
+        const generateLinkBtn = document.getElementById('generateLinkBtn');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const trackingLinkInput = document.getElementById('trackingLink');
+        const generatedLinkContainer = document.getElementById('generatedLinkContainer');
+        const locationsList = document.getElementById('locationsList');
+        const noLocationsMessage = document.getElementById('noLocationsMessage');
+        const trackingStatus = document.getElementById('trackingStatus');
+        const trackingSpinner = document.getElementById('trackingSpinner');
+
+        // Function to display messages
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type === 'error' ? 'error-box' : 'message-box'}`;
+            messageBox.classList.remove('hidden');
+            errorBox.classList.add('hidden'); // Hide error box if showing message
+        }
+
+        // Function to display errors
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
+            messageBox.classList.add('hidden'); // Hide message box if showing error
+        }
+
+        function hideMessages() {
+            messageBox.classList.add('hidden');
+            errorBox.classList.add('hidden');
+        }
+
+        // Parse URL for sessionId
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionIdFromUrl = urlParams.get('sessionId');
+
+        // --- Authentication and Initialization ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                console.log("Authenticated as:", currentUserId);
+                isAuthReady = true;
+                if (!sessionIdFromUrl) {
+                    // Tracker view
+                    trackerApp.classList.remove('hidden');
+                    trackedApp.classList.add('hidden');
+                    loadTrackingSessions();
+                } else {
+                    // Tracked view
+                    trackerApp.classList.add('hidden');
+                    trackedApp.classList.remove('hidden');
+                    await handleLocationTracking(sessionIdFromUrl, currentUserId);
+                }
+            } else {
+                // Sign in anonymously if no token, otherwise use custom token
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Signed in with custom token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Signed in anonymously.");
+                    }
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                    showError("Failed to authenticate with Firebase. Please try again.");
+                    trackingStatus.textContent = "Authentication failed.";
+                    trackingSpinner.classList.add('hidden');
+                }
+            }
+        });
+
+        // --- Tracker Functionality ---
+        async function generateTrackingLink() {
+            if (!isAuthReady || !currentUserId) {
+                showError("Authentication not ready. Please wait.");
+                return;
+            }
+            hideMessages();
+            showMessage("Generating link...");
+
+            try {
+                const sessionId = crypto.randomUUID();
+                const trackingUrl = `${window.location.origin}${window.location.pathname}?sessionId=${sessionId}`;
+
+                // Store session in public collection
+                const sessionDocRef = doc(db, `artifacts/${appId}/public/data/trackingSessions`, sessionId);
+
+                await setDoc(sessionDocRef, {
+                    createdAt: new Date().toISOString(),
+                    link: trackingUrl,
+                    ownerId: currentUserId // Store the ID of the person who generated the link
+                });
+
+                trackingLinkInput.value = trackingUrl;
+                generatedLinkContainer.classList.remove('hidden');
+                copyLinkBtn.disabled = false;
+                showMessage("Tracking link generated successfully!");
+                console.log("Generated session:", sessionId, "Link:", trackingUrl);
+
+                // Reload sessions to show the new one immediately
+                loadTrackingSessions();
+
+            } catch (error) {
+                console.error("Error generating tracking link:", error);
+                showError("Failed to generate tracking link. " + error.message);
+            }
+        }
+
+        function copyTrackingLink() {
+            trackingLinkInput.select();
+            document.execCommand('copy'); // Fallback for navigator.clipboard.writeText
+            showMessage("Link copied to clipboard!");
+        }
+
+        async function loadTrackingSessions() {
+            if (!isAuthReady || !currentUserId) {
+                console.log("Auth not ready to load sessions.");
+                return;
+            }
+
+            // Listen to public tracking sessions, filtered by ownerId
+            const sessionsCollectionRef = collection(db, `artifacts/${appId}/public/data/trackingSessions`);
+            const q = query(sessionsCollectionRef, where('ownerId', '==', currentUserId));
+
+            onSnapshot(q, (snapshot) => {
+                locationsList.innerHTML = ''; // Clear previous list
+                if (snapshot.empty) {
+                    noLocationsMessage.classList.remove('hidden');
+                    return;
+                }
+                noLocationsMessage.classList.add('hidden');
+
+                snapshot.forEach((sessionDoc) => {
+                    const sessionData = sessionDoc.data();
+                    const sessionId = sessionDoc.id;
+
+                    const sessionDiv = document.createElement('div');
+                    sessionDiv.className = 'location-item';
+                    sessionDiv.innerHTML = `
+                        <strong class="text-lg">Session ID: ${sessionId}</strong>
+                        <span class="text-blue-600 break-all">Link: <a href="${sessionData.link}" target="_blank" rel="noopener noreferrer">${sessionData.link}</a></span>
+                        <span class="text-gray-500">Created: ${new Date(sessionData.createdAt).toLocaleString()}</span>
+                        <div class="mt-2" id="locationsForSession-${sessionId}">
+                            <strong class="block mb-1">Locations:</strong>
+                            <p class="text-gray-500 text-sm" id="noLocations-${sessionId}">No locations yet for this session.</p>
+                        </div>
+                    `;
+                    locationsList.appendChild(sessionDiv);
+
+                    // Listen for locations in the public collection, filtered by sessionId and ownerId
+                    const locationsPublicCollectionRef = collection(db, `artifacts/${appId}/public/data/locations`);
+                    const locationsQuery = query(
+                        locationsPublicCollectionRef,
+                        where('sessionId', '==', sessionId),
+                        where('ownerId', '==', currentUserId)
+                    );
+
+                    onSnapshot(locationsQuery, (locationsSnapshot) => {
+                        const sessionLocationsDiv = document.getElementById(`locationsForSession-${sessionId}`);
+                        const noLocationsEl = document.getElementById(`noLocations-${sessionId}`);
+                        sessionLocationsDiv.innerHTML = '<strong class="block mb-1">Locations:</strong>'; // Reset content
+
+                        if (locationsSnapshot.empty) {
+                            noLocationsEl.classList.remove('hidden');
+                            sessionLocationsDiv.appendChild(noLocationsEl); // Re-add if empty
+                        } else {
+                            noLocationsEl.classList.add('hidden');
+                            locationsSnapshot.forEach((locationDoc) => {
+                                const locData = locationDoc.data();
+                                const locItem = document.createElement('div');
+                                locItem.className = 'text-sm text-gray-700 p-2 border-b border-gray-200 last:border-b-0';
+                                locItem.innerHTML = `
+                                    Lat: ${locData.latitude.toFixed(6)}, Lng: ${locData.longitude.toFixed(6)}<br>
+                                    Accuracy: ${locData.accuracy.toFixed(2)}m<br>
+                                    Time: ${new Date(locData.timestamp).toLocaleString()}
+                                `;
+                                sessionLocationsDiv.appendChild(locItem);
+                            });
+                        }
+                    });
+                });
+            }, (error) => {
+                console.error("Error loading tracking sessions:", error);
+                showError("Error loading tracking sessions: " + error.message);
+            });
+        }
+
+        // --- Tracked Person Functionality ---
+        async function handleLocationTracking(sessionId, trackedUserId) {
+            hideMessages();
+            trackingStatus.textContent = "Attempting to get your location...";
+            trackingSpinner.classList.remove('hidden');
+
+            try {
+                // Get the session document from the public collection to retrieve the ownerId
+                const sessionDocRef = doc(db, `artifacts/${appId}/public/data/trackingSessions`, sessionId);
+                const sessionDoc = await getDoc(sessionDocRef);
+
+                if (!sessionDoc.exists()) {
+                    showError("Invalid tracking link or session not found.");
+                    trackingStatus.textContent = "Invalid tracking link.";
+                    trackingSpinner.classList.add('hidden');
+                    return;
+                }
+
+                const ownerId = sessionDoc.data().ownerId; // Get the owner's ID from the session document
+
+                // Request geolocation
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude, accuracy } = position.coords;
+                        const timestamp = new Date().toISOString();
+
+                        // Add location to the public locations collection
+                        const locationsPublicCollectionRef = collection(db, `artifacts/${appId}/public/data/locations`);
+
+                        await addDoc(locationsPublicCollectionRef, {
+                            latitude,
+                            longitude,
+                            accuracy,
+                            timestamp,
+                            trackedUserId: trackedUserId, // The ID of the person whose location is tracked
+                            sessionId: sessionId,        // The ID of the session
+                            ownerId: ownerId             // The ID of the session owner
+                        });
+
+                        trackingStatus.textContent = "Location successfully recorded!";
+                        trackingSpinner.classList.add('hidden');
+                        showMessage("Thank you for sharing your location!");
+                        console.log("Location recorded:", { latitude, longitude, accuracy, timestamp });
+                    },
+                    (error) => {
+                        let errorMessage = "Unable to retrieve your location.";
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location access denied. Please enable location services for this site.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "The request to get user location timed out.";
+                                break;
+                            default:
+                                errorMessage = "An unknown error occurred while getting location.";
+                                break;
+                        }
+                        trackingStatus.textContent = errorMessage;
+                        trackingSpinner.classList.add('hidden');
+                        showError(errorMessage);
+                        console.error("Geolocation Error:", error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } catch (error) {
+                console.error("Error in location tracking process:", error);
+                showError("An error occurred during tracking: " + error.message);
+                trackingStatus.textContent = "An error occurred.";
+                trackingSpinner.classList.add('hidden');
+            }
+        }
+
+        // Event Listeners
+        generateLinkBtn.addEventListener('click', generateTrackingLink);
+        copyLinkBtn.addEventListener('click', copyTrackingLink);
+
+        // Initial check to hide messages
+        hideMessages();
+
+        // Ensure the correct view is shown on load based on URL
+        if (sessionIdFromUrl) {
+            trackerApp.classList.add('hidden');
+            trackedApp.classList.remove('hidden');
+        } else {
+            trackerApp.classList.remove('hidden');
+            trackedApp.classList.add('hidden');
+        }
+
+        // Add a window load listener to ensure everything is ready
+        window.onload = function() {
+            console.log("Window loaded.");
+            // The onAuthStateChanged listener handles the rest of the initialization.
+        };
+    </script>
+</body>
+</html>
